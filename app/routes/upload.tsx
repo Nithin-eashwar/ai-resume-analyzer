@@ -5,6 +5,7 @@ import { usePuterStore } from "~/lib/puter";
 import { convertPdfToImage } from "~/lib/pdf2img";
 import { generateUUID } from "~/lib/utils";
 import { i } from "node_modules/@react-router/dev/dist/routes-CZR-bKRt";
+import { prepareInstructions } from "~/constants";
 
 const Upload = () => {
   const { auth, isLoading, fs, ai, kv } = usePuterStore();
@@ -68,6 +69,26 @@ const Upload = () => {
     await kv.set(`resume:${uuid}`, JSON.stringify(data));
 
     setStatusText("Generating AI Feedback ...");
+
+    //gets feedback from ai model
+    const feedback = await ai.feedback(
+      uploadedFile?.path!,
+      //uses the instructions in the constants file
+      prepareInstructions({ jobTitle, jobDescription })
+    );
+
+    if (!feedback)
+      setStatusText("AI Feedback generation failed. Please try again.");
+
+    const feedbackText =
+      typeof feedback?.message.content === "string"
+        ? feedback?.message.content
+        : feedback?.message.content[0]?.text;
+
+    data.feedback = JSON.parse(feedbackText || "{}");
+    await kv.set(`resume:${uuid}`, JSON.stringify(data));
+
+    setStatusText("Analysis complete! Redirecting to home...");
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
