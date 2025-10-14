@@ -12,7 +12,7 @@ const Resume = () => {
 
   const [imageUrl, setImageUrl] = useState<string | null>("");
   const [resumeUrl, setResumeUrl] = useState<string | null>("");
-  const [feedback, setFeedback] = useState("");
+  const [feedback, setFeedback] = useState<any>({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,7 +44,11 @@ const Resume = () => {
       const imgUrl = URL.createObjectURL(imgBlob);
       setImageUrl(imgUrl);
 
-      setFeedback(data.feedback || "No feedback provided.");
+      setFeedback(
+        typeof data.feedback === "string"
+          ? JSON.parse(data.feedback)
+          : data.feedback || {}
+      );
     };
 
     loadResume();
